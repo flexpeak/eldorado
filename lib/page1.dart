@@ -1,31 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_db/page2.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_db/providers/theme_provider.dart';
+import 'package:provider/provider.dart';
 
-class Page1 extends StatefulWidget {
+class Page1 extends StatelessWidget {
   const Page1({super.key});
-
-  @override
-  State<Page1> createState() => _Page1State();
-}
-
-class _Page1State extends State<Page1> {
-  bool _darkMode = false;
-
-  _changeDarkModeValue(newValue) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('darkMode', newValue);
-    setState(() {
-      _darkMode = newValue;
-    });
-  }
-
-  _getDarkModeValue() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _darkMode = prefs.getBool('darkMode') == null ? false : prefs.getBool('darkMode')!;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,10 +15,14 @@ class _Page1State extends State<Page1> {
           Row(
             children: [
               const Icon(Icons.sunny),
-              Switch(
-                value: _darkMode,
-                onChanged: _changeDarkModeValue,
-              ),
+              Consumer<ThemeProvider>(builder: (context, themeProvider, child) {
+                return Switch(
+                  value: themeProvider.isDarkMode,
+                  onChanged: (newValue) {
+                    themeProvider.changeDarkMode(newValue);
+                  },
+                );
+              }),
               const Icon(Icons.nightlight)
             ],
           )
@@ -51,9 +34,11 @@ class _Page1State extends State<Page1> {
             const Text('Hello World!'),
             ElevatedButton(
               onPressed: () {
-                Navigator.of(context).push(MaterialPageRoute(
-                  builder: (_) => const Page2(),
-                ));
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const Page2(),
+                  ),
+                );
               },
               child: const Text('Ir para página 2'),
             )
