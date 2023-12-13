@@ -1,5 +1,7 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
-import 'package:flutter_db/page1.dart';
+import 'package:flutter_db/models/tarefa.dart';
 import 'package:flutter_db/providers/theme_provider.dart';
 import 'package:path/path.dart';
 import 'package:provider/provider.dart';
@@ -50,11 +52,73 @@ class MainApp extends StatelessWidget {
   }
 }
 
-class Inicio extends StatelessWidget {
-  final TextEditingController _tarefaController = TextEditingController();
-  Inicio({
+class Inicio extends StatefulWidget {
+  const Inicio({
     super.key,
   });
+
+  @override
+  State<Inicio> createState() => _InicioState();
+}
+
+class _InicioState extends State<Inicio> {
+  final TextEditingController _tarefaController = TextEditingController();
+  final _tarefas = [];
+
+  @override
+  void initState() {
+    _getTarefasFromDB();
+    super.initState();
+  }
+
+  _getTarefasFromDB() async {
+    _tarefas.clear();
+    _tarefas.addAll(await Tarefa.get());
+    setState(() {});
+  }
+
+  _exibeFormulario(context, {Tarefa? tarefa}) {
+    if (tarefa != null) {
+      _tarefaController.text = tarefa.descricao;
+    }
+
+    showDialog(
+      context: context,
+      builder: (c) {
+        return Dialog(
+          child: SizedBox(
+            height: 130,
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                children: [
+                  TextField(
+                    controller: _tarefaController,
+                    decoration: const InputDecoration(label: Text('Descrição da Tarefa')),
+                  ),
+                  ElevatedButton(
+                    onPressed: () async {
+                      if (tarefa == null) {
+                        await Tarefa(
+                          descricao: _tarefaController.text,
+                        ).create();
+                      } else {
+                        await tarefa.update(descricao: _tarefaController.text);
+                      }
+              
+                      Navigator.of(context).pop();
+                      _getTarefasFromDB();
+                    },
+                    child: const Text('Salvar'),
+                  )
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -64,39 +128,36 @@ class Inicio extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          showDialog(
-              context: context,
-              builder: (c) {
-                return Dialog(
-                  child: SizedBox(
-                    height: 120,
-                    child: Column(
-                      children: [
-                        TextField(
-                          controller: _tarefaController,
-                          decoration: const InputDecoration(
-                            label: Text('Descrição da Tarefa')
-                          ),
-                        ),
-                        ElevatedButton(
-                          onPressed: () async {
-                            final id = await database!.insert('tarefas', {
-                              'descricao': _tarefaController.text
-                            });
-                            print(id);
-                          },
-                          child: const Text('Salvar'),
-                        )
-                      ],
-                    ),
-                  ),
-                );
-              });
+          _exibeFormulario(context);
         },
         child: const Icon(Icons.add),
       ),
-      body: const Center(
-        child: Text('Página inicial'),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(8),
+          child: Column(
+            children: List.generate(_tarefas.length, (index) {
+              return ListTile(
+                onLongPress: () async {
+                  await _tarefas[index].delete();
+                  _getTarefasFromDB();
+                },
+                onTap: () {
+                  _exibeFormulario(
+                    context,
+                    tarefa: _tarefas[index],
+                  );
+                },
+                leading: CircleAvatar(
+                  child: Text(
+                    _tarefas[index].id.toString(),
+                  ),
+                ),
+                title: Text(_tarefas[index].descricao),
+              );
+            }),
+          ),
+        ),
       ),
     );
   }
