@@ -1,7 +1,10 @@
 import 'dart:convert';
 
+import 'package:flutter_db/providers/theme_provider.dart';
+import 'package:flutter_db/providers/token_provider.dart';
 import 'package:flutter_db/utils/database_helper.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 import 'package:sqflite/sql.dart';
 
 class Tarefa {
@@ -50,11 +53,13 @@ class Tarefa {
     http.delete(Uri.parse("https://curso-eldorado-default-rtdb.firebaseio.com/tarefas/$id.json"));
   }
 
-  static Future<List<Tarefa>> get() async {
+  static Future<List<Tarefa>> get(context) async {
     final instance = await DatabaseHelper.instance.database;
 
+    String? token = Provider.of<TokenProvider>(context, listen: false).token;
+
     final response = await http.get(
-      Uri.parse("https://curso-eldorado-default-rtdb.firebaseio.com/tarefas.json"),
+      Uri.parse("https://curso-eldorado-default-rtdb.firebaseio.com/tarefas.json?auth=$token"),
     );
     final Map responseData = jsonDecode(response.body);
     if (responseData != "null") {

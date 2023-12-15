@@ -1,9 +1,18 @@
-import 'package:flutter/foundation.dart';
+// ignore_for_file: use_build_context_synchronously
+
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_db/login.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/http.dart';
 
 class Register extends StatelessWidget {
-  const Register({super.key});
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  Register({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -24,13 +33,15 @@ class Register extends StatelessWidget {
                 'Registrar-se',
                 style: TextStyle(fontSize: 40),
               ),
-              const TextField(
-                decoration: InputDecoration(
+              TextField(
+                controller: _emailController,
+                decoration: const InputDecoration(
                   label: Text('Email'),
                 ),
               ),
-              const TextField(
-                decoration: InputDecoration(
+              TextField(
+                controller: _passwordController,
+                decoration: const InputDecoration(
                   label: Text('Senha'),
                 ),
                 obscureText: true,
@@ -39,19 +50,33 @@ class Register extends StatelessWidget {
                 height: 50,
               ),
               FilledButton(
-                onPressed: () {},
+                onPressed: () async {
+                  final key = dotenv.env['FIREBASE_KEY'];
+                  final Response response = await http.post(
+                    Uri.parse("https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=$key"),
+                    body: jsonEncode({'email': _emailController.text, 'password': _passwordController.text, 'returnSecureToken': true}),
+                  );
+
+                  if (response.statusCode == 200) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Usuário criado com sucesso')),
+                    );
+                  }
+                },
                 style: ButtonStyle(
                   backgroundColor: MaterialStateProperty.all(Colors.black),
                 ),
                 child: const Text('Registrar-se'),
               ),
-              TextButton(onPressed: () {
-                Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(
-                    builder: (context) => const Login(),
-                  ),
-                );
-              }, child: const Text('Voltar para Login'))
+              TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(
+                        builder: (context) => Login(),
+                      ),
+                    );
+                  },
+                  child: const Text('Voltar para Login'))
             ],
           ),
         ),

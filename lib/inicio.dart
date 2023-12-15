@@ -22,7 +22,7 @@ class _InicioState extends State<Inicio> {
 
   _getTarefasFromDB() async {
     _tarefas.clear();
-    _tarefas.addAll(await Tarefa.get());
+    _tarefas.addAll(await Tarefa.get(context));
     setState(() {});
   }
 
