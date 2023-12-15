@@ -5,8 +5,7 @@ import 'package:sqflite/sqflite.dart';
 
 class DatabaseHelper {
   static Database? _database;
-  static final DatabaseHelper instance = 
-  DatabaseHelper._privateConstructor();
+  static final DatabaseHelper instance = DatabaseHelper._privateConstructor();
 
   DatabaseHelper._privateConstructor();
 
@@ -21,10 +20,10 @@ class DatabaseHelper {
 
   Future<Database> _initializeDatabase() async {
     return await openDatabase(
-      join(await getDatabasesPath(), 'tarefas.db'),
-      version: 2,
+      join(await getDatabasesPath(), 'tarefas2.db'),
+      version: 1,
       onCreate: (db, version) {
-        return db.execute("CREATE TABLE tarefas(id integer primary key autoincrement, descricao text)");
+        return db.execute("CREATE TABLE tarefas(id text primary key, descricao text)");
       },
     );
   }
